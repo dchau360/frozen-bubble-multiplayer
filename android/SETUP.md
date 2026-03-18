@@ -73,6 +73,6 @@ In Android Studio AVD Manager, create a device:
 ## Notes
 
 - Local server hosting is not available on Android (no fork/exec)
-- LAN discovery works if server is started with `-l` flag on another machine
+- Use `start-server.sh` on another machine — it enables both TCP (Net Game / direct IP) and UDP broadcast (LAN Game discovery) by default
 - Public server list fetching requires Java HTTP implementation (TODO)
 - Assets are bundled in the APK via the `assets/` source set pointing to `share/`
