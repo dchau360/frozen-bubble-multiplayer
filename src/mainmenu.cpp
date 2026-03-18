@@ -456,13 +456,13 @@ void MainMenu::HandleInput(SDL_Event *e){
                         break;
                     } else if (e->key.keysym.sym == SDLK_LEFT) {
                         // Previous player
-                        keyConfigPlayer = (keyConfigPlayer == 1) ? 5 : keyConfigPlayer - 1;
+                        keyConfigPlayer = (keyConfigPlayer == 1) ? 4 : keyConfigPlayer - 1;
                         keyConfigIndex = 0;
                         AudioMixer::Instance()->PlaySFX("menu_change");
                         break;
                     } else if (e->key.keysym.sym == SDLK_RIGHT) {
                         // Next player
-                        keyConfigPlayer = (keyConfigPlayer == 5) ? 1 : keyConfigPlayer + 1;
+                        keyConfigPlayer = (keyConfigPlayer == 4) ? 1 : keyConfigPlayer + 1;
                         keyConfigIndex = 0;
                         AudioMixer::Instance()->PlaySFX("menu_change");
                         break;
@@ -517,10 +517,10 @@ void MainMenu::HandleInput(SDL_Event *e){
                     if (localMPMenuIndex == 0) {
                         if (e->key.keysym.sym == SDLK_LEFT) {
                             localMPPlayerCount--;
-                            if (localMPPlayerCount < 2) localMPPlayerCount = 5;
+                            if (localMPPlayerCount < 2) localMPPlayerCount = 4;
                         } else {
                             localMPPlayerCount++;
-                            if (localMPPlayerCount > 5) localMPPlayerCount = 2;
+                            if (localMPPlayerCount > 4) localMPPlayerCount = 2;
                         }
                         AudioMixer::Instance()->PlaySFX("menu_change");
                     } else if (localMPMenuIndex == 1) {
@@ -531,7 +531,7 @@ void MainMenu::HandleInput(SDL_Event *e){
                 } else if (e->key.keysym.sym == SDLK_RETURN) {
                     if (localMPMenuIndex == 0) {
                         localMPPlayerCount++;
-                        if (localMPPlayerCount > 5) localMPPlayerCount = 2;
+                        if (localMPPlayerCount > 4) localMPPlayerCount = 2;
                         AudioMixer::Instance()->PlaySFX("menu_change");
                     } else if (localMPMenuIndex == 1) {
                         localMPCR = !localMPCR;
@@ -610,11 +610,8 @@ void MainMenu::HandleInput(SDL_Event *e){
                         if (lanMenuIndex > 0) { lanMenuIndex--; AudioMixer::Instance()->PlaySFX("menu_change"); }
                         break;
                     }
-                    // Net game menu navigation (0 = Set Name, 1 = Manual entry, 2+ = public servers)
+                    // Net game menu navigation (0 = Manual entry, 1..n = public servers, n+1 = Set Name)
                     if (showingNetPanel && !networkInLobby && networkInputMode == 10) {
-                        // Account for local server if running
-                        bool hasLocal = portInUse(1511);
-                        int netMenuMax = 2 + (int)publicServers.size() + (hasLocal ? 1 : 0);
                         if (netMenuIndex > 0) { netMenuIndex--; AudioMixer::Instance()->PlaySFX("menu_change"); }
                         break;
                     }
@@ -660,9 +657,7 @@ void MainMenu::HandleInput(SDL_Event *e){
                     }
                     // Net game menu navigation
                     if (showingNetPanel && !networkInLobby && networkInputMode == 10) {
-                        // Account for local server if running
-                        bool hasLocal = portInUse(1511);
-                        int netMenuMax = 2 + (int)publicServers.size() + (hasLocal ? 1 : 0); // 0=Manual, 1=local(if present), 2..n=servers, n+1=SetName
+                        int netMenuMax = 2 + (int)publicServers.size(); // 0=Manual, 1..n=servers, n+1=SetName
                         if (netMenuIndex < netMenuMax - 1) { netMenuIndex++; AudioMixer::Instance()->PlaySFX("menu_change"); }
                         break;
                     }
@@ -1503,7 +1498,7 @@ void MainMenu::KeysPanelRender() {
     const char* indicator = awaitKp ? " <--" : " >";
 
     snprintf(keyText, sizeof(keyText),
-        "Key config  Player %d/5\n"
+        "Key config  Player %d/4\n"
         "LEFT/RIGHT to switch player\n\n"
         "%sturn left?   %s\n"
         "%sturn right?  %s\n"
@@ -1732,7 +1727,14 @@ void MainMenu::NetPanelRender() {
         // Show available players or game info below
         char playersText[256];
         if (currentGame) {
-            snprintf(playersText, sizeof(playersText), "Players in game: %s", currentGame->creator.c_str());
+            // Build comma-separated player list
+            std::string playerNames;
+            for (size_t i = 0; i < currentGame->players.size(); i++) {
+                if (i > 0) playerNames += ", ";
+                playerNames += currentGame->players[i].nick;
+            }
+            snprintf(playersText, sizeof(playersText), "Players (%d): %s",
+                (int)currentGame->players.size(), playerNames.c_str());
         } else {
             std::vector<NetworkPlayer> openPlayers = netClient->GetOpenPlayers();
             snprintf(playersText, sizeof(playersText), "Available Players: %d", (int)openPlayers.size());
@@ -1776,16 +1778,7 @@ void MainMenu::NetPanelRender() {
             serverHosting ? "Server running (rescan)" : "Host a server");
         renderLine(lineBuf, hostSel ? yellow : white, y);
 
-        // Menu items 1+: discovered servers
-        // First, show local server if running
-        bool foundLocal = false;
-        for (const auto& s : discoveredServers) {
-            if (s.host == "127.0.0.1" && s.port == 1511) {
-                foundLocal = true;
-                break;
-            }
-        }
-
+        // Menu items 1+: discovered servers (includes 127.0.0.1 if local server running)
         if (discoveredServers.empty()) {
             renderLine("  (no servers found)", white, y);
             renderLine("  Start server with: ./build/server/fb-server -l", white, y);
@@ -1851,40 +1844,20 @@ void MainMenu::NetPanelRender() {
         bool manualSel = (netMenuIndex == 0);
         renderLine(manualSel ? "[ Manual entry ]" : "  Manual entry  ", manualSel ? yellow : white, y);
 
-        // Menu items 1+: public servers + local server if running
-        // First, check if local server is running and add it to the list
-        std::vector<ServerInfo> combinedServers = publicServers;
-        bool foundLocal = false;
-        for (const auto& s : publicServers) {
-            if (s.host == "127.0.0.1" && s.port == 1511) {
-                foundLocal = true;
-                break;
-            }
-        }
-        if (!foundLocal && portInUse(1511)) {
-            ServerInfo localServer;
-            localServer.host = "127.0.0.1";
-            localServer.port = 1511;
-            localServer.name = "Local Server (LAN)";
-            localServer.latencyMs = NetworkClient::MeasureLatency("127.0.0.1", 1511);
-            combinedServers.insert(combinedServers.begin(), localServer);
-        }
-
-        if (combinedServers.empty()) {
+        // Menu items 1+: public internet servers only
+        // (Local LAN server is accessible via the LAN Game panel instead)
+        if (publicServers.empty()) {
             renderLine("  (no public servers listed)", white, y);
-            renderLine("  Start local server: ./build/server/fb-server -l", white, y);
         } else {
-            for (int i = 0; i < (int)combinedServers.size(); i++) {
-                // Adjust selection index to account for inserted local server
-                int actualIndex = i;
-                bool sel = (netMenuIndex == actualIndex + 1);
-                bool offline = (combinedServers[i].latencyMs < 0);
-                const std::string& displayName = combinedServers[i].name.empty()
-                    ? combinedServers[i].host + ":" + std::to_string(combinedServers[i].port)
-                    : combinedServers[i].name;
+            for (int i = 0; i < (int)publicServers.size(); i++) {
+                bool sel = (netMenuIndex == i + 1);
+                bool offline = (publicServers[i].latencyMs < 0);
+                const std::string& displayName = publicServers[i].name.empty()
+                    ? publicServers[i].host + ":" + std::to_string(publicServers[i].port)
+                    : publicServers[i].name;
                 char latencyBuf[16];
                 if (offline) snprintf(latencyBuf, sizeof(latencyBuf), "offline");
-                else         snprintf(latencyBuf, sizeof(latencyBuf), "%dms", combinedServers[i].latencyMs);
+                else         snprintf(latencyBuf, sizeof(latencyBuf), "%dms", publicServers[i].latencyMs);
                 snprintf(lineBuf, sizeof(lineBuf),
                     sel ? "[ %-28s %7s ]" : "  %-28s %7s  ",
                     displayName.c_str(), latencyBuf);
@@ -1895,7 +1868,7 @@ void MainMenu::NetPanelRender() {
 
         // Last menu item: Set Name
         {
-            int netMenuMax = 2 + (int)combinedServers.size(); // 0=Manual, 1..n=servers, n+1=SetName
+            int netMenuMax = 2 + (int)publicServers.size(); // 0=Manual, 1..n=servers, n+1=SetName
             bool sel = (netMenuIndex == netMenuMax - 1);
             const char* curNick = networkPreNick[0] != '\0' ? networkPreNick : (getenv("USER") ? getenv("USER") : "unnamed");
             snprintf(lineBuf, sizeof(lineBuf), sel ? "[ Set Name: %-20s ]" : "  Set Name: %-20s  ", curNick);
@@ -2238,7 +2211,7 @@ void MainMenu::ShowPanel(int which) {
             panelText.UpdatePosition({(640/2) - (panelText.Coords()->w / 2), (480/2) - 120});
             selectedMode = 3;
             break;
-        case 2: // local multiplayer (2-5 players same keyboard/controller)
+        case 2: // local multiplayer (2-4 players same keyboard/controller)
             showingLocalMPPanel = true;
             localMPMenuIndex = 0;
             localMPPlayerCount = 2;
@@ -2341,7 +2314,7 @@ void MainMenu::SetupNewGame(int mode) {
         case 6: // Multiplayer training
             FrozenBubble::Instance()->bubbleGame()->NewGame({chainReaction, 1, false, true, false, 1, true});
             break;
-        case 7: // Local multiplayer (controller-based, 2-5 players)
+        case 7: // Local multiplayer (controller-based, 2-4 players)
             FrozenBubble::Instance()->bubbleGame()->NewGame({localMPCR, localMPPlayerCount, false, true, false, 1, false, true});
             break;
         default:

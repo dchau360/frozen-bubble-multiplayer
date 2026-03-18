@@ -1230,6 +1230,23 @@ std::vector<ServerInfo> NetworkClient::DiscoverLANServers() {
     }
 
     close(udpSock);
+
+    // UDP broadcast doesn't reach loopback — also probe 127.0.0.1 directly
+    // so a locally-hosted server appears in the LAN list
+    {
+        int port = 1511;
+        bool alreadyFound = false;
+        for (const auto& s : servers) {
+            if (s.host == "127.0.0.1" && s.port == port) { alreadyFound = true; break; }
+        }
+        if (!alreadyFound && MeasureLatency("127.0.0.1", port, 300) >= 0) {
+            ServerInfo si;
+            si.host = "127.0.0.1";
+            si.port = port;
+            servers.insert(servers.begin(), si);  // Put localhost first
+        }
+    }
+
     return servers;
 }
 

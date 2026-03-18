@@ -661,17 +661,15 @@ void SetupGameMetrics(BubbleArray *bArray, int playerCount, bool lowGfx, bool lo
                 bArray[0].lGfxShooterRct.w = bArray[0].lGfxShooterRct.h = 2;
                 bArray[1].lGfxShooterRct.w = bArray[1].lGfxShooterRct.h = 2;
             }
-            if (!localMultiplayer) {
-                bArray[0].curLaunchRct = {SCREEN_CENTER_X+144, 480-89, 32, 32};
-                bArray[0].nextBubbleRct = {SCREEN_CENTER_X+144, 480-40, 32, 32};
-                bArray[0].onTopRct = {SCREEN_CENTER_X+140, 480-43, 39, 39};
-                bArray[0].frozenBottomRct = {SCREEN_CENTER_X+139, 480-43, 39, 39};
+            bArray[0].curLaunchRct = {SCREEN_CENTER_X+144, 480-89, 32, 32};
+            bArray[0].nextBubbleRct = {SCREEN_CENTER_X+144, 480-40, 32, 32};
+            bArray[0].onTopRct = {SCREEN_CENTER_X+140, 480-43, 39, 39};
+            bArray[0].frozenBottomRct = {SCREEN_CENTER_X+139, 480-43, 39, 39};
 
-                bArray[1].curLaunchRct = {SCREEN_CENTER_X-176, 480-89, 32, 32};
-                bArray[1].nextBubbleRct = {SCREEN_CENTER_X-176, 480-40, 32, 32};
-                bArray[1].onTopRct = {SCREEN_CENTER_X-179, 480-43, 39, 39};
-                bArray[1].frozenBottomRct = {SCREEN_CENTER_X-180, 480-43, 39, 39};
-            }
+            bArray[1].curLaunchRct = {SCREEN_CENTER_X-176, 480-89, 32, 32};
+            bArray[1].nextBubbleRct = {SCREEN_CENTER_X-176, 480-40, 32, 32};
+            bArray[1].onTopRct = {SCREEN_CENTER_X-179, 480-43, 39, 39};
+            bArray[1].frozenBottomRct = {SCREEN_CENTER_X-180, 480-43, 39, 39};
             break;
         case 3:
         case 4:
@@ -727,6 +725,7 @@ void BubbleGame::NewGame(SetupSettings setup) {
     mpTrainStartTime = 0;
 
     winsP1 = winsP2 = 0;
+    for (int i = 0; i < 5; i++) bubbleArrays[i].winCount = 0;
 
     // Initialize controllers for local multiplayer
     if (currentSettings.localMultiplayer) {
@@ -742,150 +741,11 @@ void BubbleGame::NewGame(SetupSettings setup) {
     // 3-player uses top-left, top-right, bottom-left (bottom-right quadrant is empty)
     // 4-player uses all 4 quadrants
     // 5-player uses all 4 quadrants plus center player (full size)
-    if (currentSettings.localMultiplayer &&
-        (currentSettings.playerCount >= 2 && currentSettings.playerCount <= 5)) {
-        SDL_Log("NewGame: Local %d-player 2x2 layout", currentSettings.playerCount);
-        background = IMG_LoadTexture(rend, ASSET("/gfx/back_multiplayer.png").c_str());
-
-        // Mini bubble size is 16px; row size = 16 * 7/8 = 14px
-        // Each grid spans 8 bubbles wide = 128px, fits in 320px quadrant
-        // Quadrant origins: TL=(0,0), TR=(320,0), BL=(0,240), BR=(320,240)
-        // Offset within quadrant: center grid horizontally = (320-128)/2 = 96
-        // Grid top = 20px from quadrant top
-
-        const int bubSz = 16;
-        const int gridW = bubSz * 8;  // 128
-
-        // Quadrant left-edges for bubble grid (horizontal center)
-        const int qLeftX[4]  = { 96,       320 + 96, 96,       320 + 96 };
-        const int qTopY[4]   = { 10,       10,       240 + 10, 240 + 10 };
-
-        // Shooter position: bottom-center of each quadrant
-        const int shootX[4]  = { 160 - 25, 480 - 25, 160 - 25, 480 - 25 };
-        const int shootY[4]  = { 200 - 50, 200 - 50, 440 - 50, 440 - 50 };
-
-        // Penguin position: to the right of each shooter
-        const int penX[4]    = { 160 + 30, 480 + 30, 160 + 30, 480 + 30 };
-        const int penY[4]    = { 200 - 30, 200 - 30, 440 - 30, 440 - 30 };
-
-        // curLaunch: horizontally centered in grid, just above shooter
-        const int launchX[4] = { 160 - 8,  480 - 8,  160 - 8,  480 - 8  };
-        const int launchY[4] = { 200 - 40, 200 - 40, 440 - 40, 440 - 40 };
-
-        // Next bubble: below and to the side of launcher
-        const int nextX[4]   = { 108,      428,      108,      428       };
-        const int nextY[4]   = { 220,      220,      460,      460       };
-
-        // Left/right limits for each grid
-        const int leftLim[4] = { qLeftX[0], qLeftX[1], qLeftX[2], qLeftX[3] };
-        const int rightLim[4]= { qLeftX[0] + gridW, qLeftX[1] + gridW,
-                                  qLeftX[2] + gridW, qLeftX[3] + gridW };
-
-        // For 5-player: center player uses full-size layout, 4 corners use mini grids
-        // For 2-4 player: all players use mini grids in quadrants
-        if (currentSettings.playerCount == 5) {
-            // 5-player layout: center player (full size) + 4 corners (mini)
-            // Center player (p1) - full size layout
-            bubbleArrays[0].penguinSprite.LoadPenguin(rend, "p1", {213, 420, 80, 60});
-            bubbleArrays[0].shooterSprite = {shooterTexture, rend};
-            bubbleArrays[0].shooterSprite.rect = {268, 356, 100, 100};
-            bubbleArrays[0].shooterSprite.angle = PI/2.0f;
-            bubbleArrays[0].bubbleOffset = {190, 44};
-            bubbleArrays[0].leftLimit = 190;
-            bubbleArrays[0].rightLimit = 446;
-            bubbleArrays[0].topLimit = 44;
-            bubbleArrays[0].hurryRct = {10, 265, 244, 102};
-            bubbleArrays[0].curLaunchRct = {302, 390, 32, 32};
-            bubbleArrays[0].nextBubbleRct = {112, 440, 32, 32};
-            bubbleArrays[0].onTopRct = {108, 437, 39, 39};
-            bubbleArrays[0].frozenBottomRct = {108, 437, 39, 39};
-            bubbleArrays[0].numSeparators = 0;
-            bubbleArrays[0].playerAssigned = 0;
-            bubbleArrays[0].turnsToCompress = 12;
-            bubbleArrays[0].mpWinner = false;
-            bubbleArrays[0].mpDone = false;
-            bubbleArrays[0].playerState = BubbleArray::PlayerState::ALIVE;
-            bubbleArrays[0].hurryTimer = bubbleArrays[0].warnTimer = 0;
-            bubbleArrays[0].hurryTexture = IMG_LoadTexture(rend, ASSET("/gfx/hurry_p1.png").c_str());
-            bubbleArrays[0].scorePos = {320, 12};  // Center top
-
-            // Corner players (rp1-rp4) - mini grids in each quadrant
-            const char* cornerStyles[4] = {"p2", "p2", "p2", "p2"};
-            SDL_Texture* cornerHurry[4] = {
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-            };
-
-            for (int i = 0; i < 4; i++) {
-                int pIdx = i + 1;  // Players 1-4 (indices 1-4 in bubbleArrays)
-                bubbleArrays[pIdx].penguinSprite.LoadPenguin(rend, const_cast<char*>(cornerStyles[i]),
-                    {penX[i], penY[i], 40, 30});
-                bubbleArrays[pIdx].shooterSprite = {miniShooterTexture, rend};
-                bubbleArrays[pIdx].shooterSprite.rect = {shootX[i], shootY[i], 50, 50};
-                bubbleArrays[pIdx].shooterSprite.angle = PI/2.0f;
-                bubbleArrays[pIdx].bubbleOffset = {qLeftX[i], qTopY[i]};
-                bubbleArrays[pIdx].leftLimit = leftLim[i];
-                bubbleArrays[pIdx].rightLimit = rightLim[i];
-                bubbleArrays[pIdx].topLimit = qTopY[i];
-                bubbleArrays[pIdx].hurryRct = {qLeftX[i] + 5, qTopY[i] + 108, 122, 51};
-                bubbleArrays[pIdx].curLaunchRct = {launchX[i], launchY[i], bubSz, bubSz};
-                bubbleArrays[pIdx].nextBubbleRct = {nextX[i], nextY[i], bubSz, bubSz};
-                bubbleArrays[pIdx].onTopRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-                bubbleArrays[pIdx].frozenBottomRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-                bubbleArrays[pIdx].numSeparators = 0;
-                bubbleArrays[pIdx].playerAssigned = pIdx;
-                bubbleArrays[pIdx].turnsToCompress = 12;
-                bubbleArrays[pIdx].mpWinner = false;
-                bubbleArrays[pIdx].mpDone = false;
-                bubbleArrays[pIdx].playerState = BubbleArray::PlayerState::ALIVE;
-                bubbleArrays[pIdx].hurryTimer = bubbleArrays[pIdx].warnTimer = 0;
-                bubbleArrays[pIdx].scorePos = {leftLim[i], qTopY[i]};
-                bubbleArrays[pIdx].hurryTexture = cornerHurry[i];
-            }
-        } else {
-            // 2-4 player layout: all players use mini grids in quadrants
-            const char* penguinStyles[4] = {"p1", "p2", "p2", "p2"};
-            SDL_Texture* hurryTextures[4] = {
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p1.png").c_str()),
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-                IMG_LoadTexture(rend, ASSET("/gfx/hurry_p2.png").c_str()),
-            };
-
-            // Initialize only the players that are actually playing (2, 3, or 4)
-            for (int i = 0; i < currentSettings.playerCount; i++) {
-                bubbleArrays[i].penguinSprite.LoadPenguin(rend, const_cast<char*>(penguinStyles[i]),
-                    {penX[i], penY[i], 40, 30});
-                bubbleArrays[i].shooterSprite = {miniShooterTexture, rend};
-                bubbleArrays[i].shooterSprite.rect = {shootX[i], shootY[i], 50, 50};
-                bubbleArrays[i].shooterSprite.angle = PI/2.0f;
-                bubbleArrays[i].bubbleOffset = {qLeftX[i], qTopY[i]};
-                bubbleArrays[i].leftLimit = leftLim[i];
-                bubbleArrays[i].rightLimit = rightLim[i];
-                bubbleArrays[i].topLimit = qTopY[i];
-                bubbleArrays[i].hurryRct = {leftLim[i], qTopY[i] + 100, 122, 51};
-                bubbleArrays[i].curLaunchRct = {launchX[i], launchY[i], bubSz, bubSz};
-                bubbleArrays[i].nextBubbleRct = {nextX[i], nextY[i], bubSz, bubSz};
-                bubbleArrays[i].onTopRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-                bubbleArrays[i].frozenBottomRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-                bubbleArrays[i].numSeparators = 0;
-                bubbleArrays[i].playerAssigned = i;
-                bubbleArrays[i].turnsToCompress = 12;
-                bubbleArrays[i].mpWinner = false;
-                bubbleArrays[i].mpDone = false;
-                bubbleArrays[i].playerState = BubbleArray::PlayerState::ALIVE;
-                bubbleArrays[i].hurryTimer = bubbleArrays[i].warnTimer = 0;
-                bubbleArrays[i].scorePos = {leftLim[i], qTopY[i]};
-                bubbleArrays[i].hurryTexture = hurryTextures[i];
-            }
-        }
-        audMixer->PlayMusic("main2p");
-
-        // Skip the regular switch for this case (2-5 player local are handled above)
-        goto after_layout_switch;
-    }
+    // Local multiplayer (2-4 players) uses the same visual layouts as network equivalents:
+    // - 2P: backgrnd.png, side-by-side full grids (case 2)
+    // - 3P: back_multiplayer.png, center(P1) + TL+TR mini (case 3)
+    // - 4P: back_multiplayer.png, center(P1) + TL+TR+BL mini (case 4)
+    // This falls through to the switch below; no special block needed.
 
     SDL_Log("NewGame: Entering switch with playerCount=%d", currentSettings.playerCount);
     switch (currentSettings.playerCount) {
@@ -1244,8 +1104,6 @@ void BubbleGame::NewGame(SetupSettings setup) {
             break;
     }
 
-    after_layout_switch:;  // Jump target for local multiplayer layouts that bypass the switch
-
     // Set lobby player IDs for network games
     if (currentSettings.networkGame) {
         NetworkClient* netClient = NetworkClient::Instance();
@@ -1371,57 +1229,7 @@ void BubbleGame::ReloadGame(int level) {
         bubbleArrays[i].hurryTimer = bubbleArrays[i].warnTimer = 0;
     }
 
-    // ReloadGame: Reset bubble offsets for local multiplayer 2x2 grid layout
-    if (currentSettings.localMultiplayer && currentSettings.playerCount >= 2 && currentSettings.playerCount <= 5) {
-        const int bubSz = 16;
-        const int qLeftX[4]  = { 96,       320 + 96, 96,       320 + 96 };
-        const int qTopY[4]   = { 10,       10,       240 + 10, 240 + 10 };
-        const int launchX[4] = { 160 - 8,  480 - 8,  160 - 8,  480 - 8  };
-        const int launchY[4] = { 200 - 40, 200 - 40, 440 - 40, 440 - 40 };
-        const int nextX[4]   = { 108,      428,      108,      428       };
-        const int nextY[4]   = { 220,      220,      460,      460       };
-        const int leftLim[4] = { qLeftX[0], qLeftX[1], qLeftX[2], qLeftX[3] };
-        const int rightLim[4]= { qLeftX[0] + 128, qLeftX[1] + 128, qLeftX[2] + 128, qLeftX[3] + 128 };
-
-        if (currentSettings.playerCount == 5) {
-            // Center player (full size) - reset to original positions
-            bubbleArrays[0].shooterSprite.angle = PI/2.0f;
-            bubbleArrays[0].bubbleOffset = {190, 44};
-            bubbleArrays[0].turnsToCompress = 12;
-            bubbleArrays[0].numSeparators = 0;
-            // Corner players (mini grids)
-            for (int i = 0; i < 4; i++) {
-                int pIdx = i + 1;
-                bubbleArrays[pIdx].shooterSprite.angle = PI/2.0f;
-                bubbleArrays[pIdx].bubbleOffset = {qLeftX[i], qTopY[i]};
-                bubbleArrays[pIdx].leftLimit = leftLim[i];
-                bubbleArrays[pIdx].rightLimit = rightLim[i];
-                bubbleArrays[pIdx].topLimit = qTopY[i];
-                bubbleArrays[pIdx].turnsToCompress = 12;
-                bubbleArrays[pIdx].numSeparators = 0;
-                bubbleArrays[pIdx].curLaunchRct = {launchX[i], launchY[i], bubSz, bubSz};
-                bubbleArrays[pIdx].nextBubbleRct = {nextX[i], nextY[i], bubSz, bubSz};
-                bubbleArrays[pIdx].onTopRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-                bubbleArrays[pIdx].frozenBottomRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-            }
-        } else {
-            // 2-4 player: all players use mini grids
-            for (int i = 0; i < currentSettings.playerCount; i++) {
-                bubbleArrays[i].shooterSprite.angle = PI/2.0f;
-                bubbleArrays[i].bubbleOffset = {qLeftX[i], qTopY[i]};
-                bubbleArrays[i].leftLimit = leftLim[i];
-                bubbleArrays[i].rightLimit = rightLim[i];
-                bubbleArrays[i].topLimit = qTopY[i];
-                bubbleArrays[i].turnsToCompress = 12;
-                bubbleArrays[i].numSeparators = 0;
-                bubbleArrays[i].curLaunchRct = {launchX[i], launchY[i], bubSz, bubSz};
-                bubbleArrays[i].nextBubbleRct = {nextX[i], nextY[i], bubSz, bubSz};
-                bubbleArrays[i].onTopRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-                bubbleArrays[i].frozenBottomRct = {nextX[i] - 2, nextY[i] - 2, bubSz + 7, bubSz + 7};
-            }
-        }
-        goto after_reload_switch;
-    }
+    // Local multiplayer reload uses same switch cases as network equivalents (no special block needed).
 
     switch (currentSettings.playerCount) {
         case 2:
@@ -1520,8 +1328,6 @@ void BubbleGame::ReloadGame(int level) {
             bubbleArrays[4].frozenBottomRct = {546, 443, 39, 39};
             break;
     }
-
-after_reload_switch:
 
     RemoveArray(bubbleArrays, currentSettings.playerCount);
     SetupGameMetrics(bubbleArrays, currentSettings.playerCount, lowGfx, currentSettings.localMultiplayer);
@@ -2116,6 +1922,12 @@ void BubbleGame::UpdateSingleBubbles(int /*id*/) {
         if (malus.shouldStick) {
             SDL_Log("Malus bubble sticking at cx=%d stickY=%d", malus.cx, malus.stickY);
             malusArray->PlacePlayerBubble(malus.bubbleId, malus.stickY, malus.cx);
+            // Malus landing must NOT be a match activator.
+            // Original uses real_stick_bubble() (no match check) for malus sticking.
+            // Reset playerBubble so CheckPossibleDestroy below doesn't treat it as an
+            // activator — otherwise malus landing next to same-colored bubbles would
+            // generate and send malus back to opponents.
+            malusArray->bubbleMap[malus.stickY][malus.cx].playerBubble = false;
             malusArray->newShoot = true;
 
             // Send 'M' message to sync sticking (original line 1456-1466)
@@ -2450,7 +2262,13 @@ void BubbleGame::CheckPossibleDestroy(BubbleArray &bArray){
 
     // Assign chain reaction targets to newly falling bubbles (original line 814-865)
     // This happens ONCE per stick event, not every frame
-    if (currentSettings.chainReaction && fallingCount > 0) {
+    // In network games, only run chain reactions for the LOCAL player (array 0).
+    // Remote players handle chain reactions on their own clients; running AssignChainReactions
+    // on mini-player arrays (1+) would use wrong 32px column spacing for the 16px mini grid,
+    // corrupting the singleBubbles list and potentially interfering with local chain reactions.
+    bool shouldRunChainReactions = currentSettings.chainReaction && fallingCount > 0 &&
+        (!currentSettings.networkGame || bArray.playerAssigned == 0);
+    if (shouldRunChainReactions) {
         AssignChainReactions(bArray);
     }
 
@@ -2503,7 +2321,10 @@ void DoFalling(std::vector<SDL_Point> &map, std::vector<SingleBubble> &bubbles, 
         int y = map[i - 1].y;
         shiftSameLine = line != y ? 0 : shiftSameLine;
         line = y;
-        bubbles[i - 1].GenerateFreeFall(true, (maxy - y) * 5 + shiftSameLine);
+        // Use falling=true (not explode) so AssignChainReactions can find these bubbles.
+        // Only the directly-matched group in CheckPossibleDestroy gets exploding=true.
+        // Original: disconnected bubbles go into @falling_bubble (falling), not @exploding_bubble.
+        bubbles[i - 1].GenerateFreeFall(false, (maxy - y) * 5 + shiftSameLine);
         singleBubbles.push_back(bubbles[i - 1]);
         shiftSameLine++;
     }
@@ -3206,6 +3027,7 @@ void BubbleGame::HandlePlayerLoss(BubbleArray &bArray) {
                 } else {
                     winsP2++;
                 }
+                bubbleArrays[winnerIdx].winCount++;
                 Update2PText();
             }
         } else if (livingCount == 0) {
@@ -3274,6 +3096,7 @@ void BubbleGame::CheckGameState(BubbleArray &bArray) {
             if (currentSettings.networkGame && bArray.playerAssigned == 0) {
                 // Local player cleared all bubbles - we won!
                 winsP1++;
+                bArray.winCount++;
                 Update2PText();
 
                 // Send 'F' message to inform opponent (original line 1943)
@@ -3342,9 +3165,10 @@ void BubbleGame::Render() {
 
         // Check if both players are ready for new game after round ends
         if (waitingForOpponentNewGame && opponentReadyForNewGame) {
-            SDL_Log("Both players ready - starting new game (detected in render loop)");
+            SDL_Log("All players ready - starting new game (detected in render loop)");
             waitingForOpponentNewGame = false;
             opponentReadyForNewGame = false;
+            opponentsReadyCount = 0;
             // In network games, check who won by looking at mpWinner flags
             // The player who cleared their board or whose opponent hit danger wins
             bool localPlayerWon = bubbleArrays[0].mpWinner;
@@ -3575,11 +3399,16 @@ void BubbleGame::Render() {
             // Don't call it here per-player anymore
 
             // Display score with nickname for each player (original: print_scores at line 1868)
-            UpdateScoreText(curArray);
+            // In 3+ player games, skip score text — win counts are shown via UpdatePlayerNameWinText
+            // at the same screen positions, so rendering both would cause overlapping text.
+            if (currentSettings.playerCount < 3) {
+                UpdateScoreText(curArray);
+            }
 
-            // Display "left" overlay for dead remote players (original line 1951-1955)
+            // Display "left" overlay for players who actually disconnected (original line 1951-1955)
+            // NOTE: LOST = died (still in game), LEFT = disconnected. Only show for LEFT.
             if (currentSettings.networkGame && curArray.playerAssigned >= 1 &&
-                curArray.playerState == BubbleArray::PlayerState::LOST) {
+                curArray.playerState == BubbleArray::PlayerState::LEFT) {
                 // Determine which texture and position to use based on player and mini graphics
                 SDL_Texture* leftTexture = nullptr;
                 SDL_Rect leftRect = {0, 0, 0, 0};
@@ -3854,13 +3683,20 @@ void BubbleGame::HandleInput(SDL_Event *e) {
                     // In network game, synchronize new game with opponent
                     if (currentSettings.networkGame) {
                         // Send 'n' and start waiting - render loop will start game when both ready
-                        SDL_Log("Sending newgame signal 'n' to opponent (gameFinish=%d, gameWon=%d, gameLost=%d)",
-                                gameFinish, gameWon, gameLost);
-                        NetworkClient* netClient = NetworkClient::Instance();
-                        if (netClient->IsConnected() && netClient->GetState() == IN_GAME) {
-                            netClient->SendGameData("n");
-                            waitingForOpponentNewGame = true;
-                            SDL_Log("Waiting for opponent to be ready...");
+                        // Guard: don't send 'n' again if already waiting (prevents double-counting at peers)
+                        if (!waitingForOpponentNewGame) {
+                            SDL_Log("Sending newgame signal 'n' to opponent (gameFinish=%d, gameWon=%d, gameLost=%d)",
+                                    gameFinish, gameWon, gameLost);
+                            NetworkClient* netClient = NetworkClient::Instance();
+                            if (netClient->IsConnected() && netClient->GetState() == IN_GAME) {
+                                netClient->SendGameData("n");
+                                waitingForOpponentNewGame = true;
+                                // Don't reset opponentsReadyCount here — 'n' messages from peers may have
+                                // already arrived before we pressed ENTER, and resetting would lose them.
+                                // The count is reset in the render loop when the new game actually starts.
+                                SDL_Log("Waiting for all opponents to be ready (already have %d/%d)...",
+                                        opponentsReadyCount, currentSettings.playerCount - 1);
+                            }
                         }
                     } else {
                         // Single player or local multiplayer
@@ -4033,26 +3869,24 @@ void BubbleGame::ProcessNetworkMessages() {
                         break;
                     }
                     case 'n': {
-                        // Newgame - opponent is ready for next round
-                        SDL_Log("Opponent ready for new game (received 'n')");
-                        opponentReadyForNewGame = true;
+                        // Newgame - an opponent is ready for next round
+                        opponentsReadyCount++;
+                        SDL_Log("Opponent ready for new game (received 'n'), count=%d/%d",
+                                opponentsReadyCount, currentSettings.playerCount - 1);
+                        if (opponentsReadyCount >= currentSettings.playerCount - 1) {
+                            opponentReadyForNewGame = true;
+                        }
 
-                        // Auto-response logic for 2-player games only
-                        // In 3+ player games, we need ALL players to be ready, so don't auto-respond
-                        // The local player must explicitly press ENTER to send 'n'
-                        if (currentSettings.playerCount == 2) {
-                            // If we haven't sent our 'n' yet, send it now (opponent pressed key first)
-                            // This matches original behavior at line 2464-2468 in frozen-bubble
-                            if (!waitingForOpponentNewGame && gameFinish) {
-                                SDL_Log("Opponent pressed key first - sending our 'n' response (2P game)");
-                                NetworkClient* netClient = NetworkClient::Instance();
-                                if (netClient->IsConnected() && netClient->GetState() == IN_GAME) {
-                                    netClient->SendGameData("n");
-                                    waitingForOpponentNewGame = true;
-                                }
+                        // Auto-respond for ALL player counts (original: receiving 'n' triggers mp_newgame->()
+                        // which immediately sends our own 'n' without requiring local keypress).
+                        // This means only ONE player needs to press a key; everyone else auto-responds.
+                        if (!waitingForOpponentNewGame && gameFinish) {
+                            SDL_Log("Opponent pressed key first - auto-sending 'n' (%dP game)", currentSettings.playerCount);
+                            NetworkClient* netClient = NetworkClient::Instance();
+                            if (netClient->IsConnected() && netClient->GetState() == IN_GAME) {
+                                netClient->SendGameData("n");
+                                waitingForOpponentNewGame = true;
                             }
-                        } else {
-                            SDL_Log("Received 'n' in %dP game - waiting for local player to press ENTER", currentSettings.playerCount);
                         }
                         break;
                     }
@@ -4300,6 +4134,7 @@ void BubbleGame::ProcessNetworkMessages() {
                                 winsP2++;
                                 SDL_Log("Win counter updated: Opponent won! winsP2=%d", winsP2);
                             }
+                            bubbleArrays[winnerPlayer].winCount++;
                             Update2PText();
                             panelRct = {SCREEN_CENTER_X - 173, 480 - 289, 329, 159};
                         } else {
@@ -4353,6 +4188,7 @@ void BubbleGame::ProcessNetworkMessages() {
 
                                         if (w == 0) winsP1++;
                                         else winsP2++;
+                                        bubbleArrays[w].winCount++;
                                         Update2PText();
                                         break;
                                     }

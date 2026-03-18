@@ -18,7 +18,6 @@ fi
 # Parse command line arguments
 PORT=1511
 DEBUG_MODE=""
-LAN_MODE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -30,18 +29,17 @@ while [[ $# -gt 0 ]]; do
             DEBUG_MODE="-d"
             shift
             ;;
-        -l|--lan)
-            LAN_MODE="-l"
-            shift
-            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  -p, --port PORT    Set server port (default: 1511)"
             echo "  -d, --debug        Run in debug mode (logs to console)"
-            echo "  -l, --lan          Enable LAN discovery mode"
             echo "  -h, --help         Show this help message"
+            echo ""
+            echo "The server always enables both:"
+            echo "  - TCP on PORT for LAN and internet (Net Game) connections"
+            echo "  - UDP on PORT for LAN broadcast discovery"
             echo ""
             echo "Example:"
             echo "  $0 -p 1234 -d      # Run on port 1234 with debug output"
@@ -56,11 +54,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "Starting server on port $PORT..."
-echo "Options: ${DEBUG_MODE:-none} ${LAN_MODE:-none}"
+echo "  TCP: LAN + internet (Net Game) connections"
+echo "  UDP: LAN broadcast discovery"
 echo "Press Ctrl+C to stop the server"
 echo ""
 echo "Server logs:"
 echo "----------------------------------------"
 
-# Start server with quiet mode (-q) to not register with master server
-./fb-server -p $PORT -q $DEBUG_MODE $LAN_MODE
+# -q: don't register with frozen-bubble.org master server (offline since ~2012)
+# -l: enable UDP broadcast so clients can auto-discover on LAN
+# -z: no language requirement
+./fb-server -p $PORT -q -l -z $DEBUG_MODE
