@@ -3,56 +3,97 @@
   <img src="https://github.com/user-attachments/assets/c68db5c9-7e72-4d19-8e98-c598a3f5e54e">
 </p>
 
+A C++ / SDL2 port of the classic [Frozen Bubble 2](http://www.frozen-bubble.org/), reimplementing its gameplay, network multiplayer, and chain reaction system. Targets desktop (Linux/macOS/Windows), Android TV, and WebAssembly.
 
-An ongoing port of the original Frozen-Bubble 2 into a newer C++ codebase using SDL2. I am planning on reimplementing most features from the original Frozen-Bubble 2 into the codebase, but some of them might be out of my knowledge. Feel free to contribute if you want!
+---
 
-Checklist: https://github.com/Erizur/frozen-bubble-sdl2/issues/1
+## Game Modes
 
-# Building
-You need to obtain the following libraries: 
-- SDL2
-- SDL2_image
-- SDL2_mixer
-- SDL2_ttf
+### Single Player
+Classic Frozen Bubble gameplay — 100 levels, scoring, chain reactions.
+
+### 2-Player Local
+Two players on the same keyboard:
+- Player 1: Arrow keys + Up to fire
+- Player 2: C/X/V + D to fire
+
+### Network Multiplayer (2–5 players)
+Play over LAN or internet using the included server. Supports chain reactions, malus (attack bubbles), win tracking, and 3–5 player layouts.
+
+---
+
+## Building
+
+**Dependencies:**
+- SDL2, SDL2_image, SDL2_mixer, SDL2_ttf
 - [iniparser](https://github.com/ndevilla/iniparser)
+- CMake 3.16+
 
-Make sure these are detected by CMake. After that, you're ready to compile!
-You will be able to compile the server-related code if you're trying to compile for macOS and Linux.
-For the moment, the DATA_DIR path is fixed to the path of the repository, unless you specify your own path.
-
-# Game Modes
-
-## Single Player
-Classic Frozen Bubble gameplay with chain reactions and scoring system.
-
-## 2-Player Local (LAN Game)
-- Select "LAN game" or "2-player game" from menu
-- Two players on same computer with different keyboard controls
-- Player 1: Arrow keys
-- Player 2: C/X/V/D keys
-
-## Network Multiplayer
-Complete online multiplayer with integrated server hosting.
-
-### Quick Start - Network Play
-
-**Easiest way (host in-game):**
-1. Launch game and select "Network game"
-2. Press **H** to host (auto-starts server)
-3. Press ENTER, then C to create game, S to start
-4. Other players: Press **J** to join, enter your IP
-
-**Alternative (manual server):**
 ```bash
-./start-server.sh -d    # Run with debug output
+cmake -B build
+cmake --build build
 ```
 
-See [NETWORK_PLAY.md](NETWORK_PLAY.md) for detailed documentation.
+The server binary (`fb-server`) is built automatically on Linux and macOS.
 
-### Server Options
+---
+
+## Running a Server
+
 ```bash
-./start-server.sh -h           # Show help
-./start-server.sh -p 1234      # Custom port
-./start-server.sh -d           # Debug mode
-./start-server.sh -l           # LAN discovery
+./start-server.sh          # Start on default port 1511
+./start-server.sh -p 1234  # Custom port
+./start-server.sh -d       # Debug output
 ```
+
+`start-server.sh` enables both TCP (direct connections) and UDP broadcast (LAN auto-discovery) by default.
+
+---
+
+## Network Play Quick Start
+
+**Host:**
+1. Start the server: `./start-server.sh`
+2. Launch the game → **LAN Game** (auto-discovers) or **Net Game** (enter IP)
+3. Create a game room and wait for players
+
+**Join:**
+1. Launch the game → **LAN Game** to auto-discover on your network
+2. Or **Net Game** → enter the host's IP
+
+Any player pressing Enter after a round ends automatically starts the next round for everyone.
+
+---
+
+## Public Server List
+
+Community servers are listed in [`serverlist-1`](serverlist-1) — same format as the original `frozen-bubble.org` server list:
+
+```
+# host port
+myserver.example.com 1511
+```
+
+Submit a PR to add your server. The game fetches this list automatically on startup.
+
+---
+
+## Android TV
+
+See [`android/SETUP.md`](android/SETUP.md) for build instructions.
+
+Controller mapping:
+
+| Button | Action |
+|---|---|
+| D-pad Left/Right | Aim |
+| A | Fire / Select |
+| B | Back |
+| Start | Pause |
+
+---
+
+## Credits
+
+Original Frozen Bubble by [Glenn Sanson et al.](http://www.frozen-bubble.org/) — GPL licensed.
+This port is independently developed and not affiliated with the original project.
