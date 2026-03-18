@@ -13,6 +13,11 @@ import org.libsdl.app.SDLActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 /**
  * Frozen Bubble Android TV Activity.
  *
@@ -60,6 +65,34 @@ public class FrozenBubbleActivity extends SDLActivity {
                 return true;
             default:
                 return false;
+        }
+    }
+
+    /**
+     * Called from C++ via JNI to fetch a URL synchronously.
+     * Must be called from a background thread (not the main/UI thread).
+     * Returns the response body as a string, or "" on error.
+     */
+    public static String fetchUrl(String urlStr) {
+        try {
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(8000);
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "FrozenBubble-SDL2/1.0");
+            int code = conn.getResponseCode();
+            if (code != HttpURLConnection.HTTP_OK) return "";
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            reader.close();
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
         }
     }
 

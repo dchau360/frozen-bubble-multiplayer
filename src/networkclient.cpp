@@ -21,7 +21,12 @@
 #include <cstring>
 #include <errno.h>
 #include <netdb.h>
+#include <sstream>
 #include <stdio.h>
+#ifdef __ANDROID__
+#include <jni.h>
+#include <SDL_system.h>
+#endif
 
 NetworkClient* NetworkClient::ptrInstance = nullptr;
 
@@ -1298,10 +1303,71 @@ bool NetworkClient::IsReachable(const char* host, int port, int timeoutMs) {
 #define STR(s) #s
 #define PROTO_MAJOR_STR XSTR(PROTO_MAJOR)
 
+#ifdef __ANDROID__
+// Fetch a URL via JNI by calling FrozenBubbleActivity.fetchUrl(String) → String.
+// SDL2's SDL_AndroidGetJNIEnv() / SDL_AndroidGetActivity() give us the JNI context.
+static std::string androidFetchUrl(const char* url) {
+    JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+    jobject activity = (jobject)SDL_AndroidGetActivity();
+    if (!env || !activity) return "";
+
+    jclass cls = env->GetObjectClass(activity);
+    jmethodID mid = env->GetStaticMethodID(cls, "fetchUrl", "(Ljava/lang/String;)Ljava/lang/String;");
+    if (!mid) {
+        SDL_Log("androidFetchUrl: fetchUrl method not found");
+        env->DeleteLocalRef(cls);
+        env->DeleteLocalRef(activity);
+        return "";
+    }
+
+    jstring jurl = env->NewStringUTF(url);
+    jstring jresult = (jstring)env->CallStaticObjectMethod(cls, mid, jurl);
+    env->DeleteLocalRef(jurl);
+    env->DeleteLocalRef(cls);
+    env->DeleteLocalRef(activity);
+
+    if (!jresult) return "";
+    const char* chars = env->GetStringUTFChars(jresult, nullptr);
+    std::string result(chars ? chars : "");
+    env->ReleaseStringUTFChars(jresult, chars);
+    env->DeleteLocalRef(jresult);
+    return result;
+}
+#endif
+
 static void curlFetch(const char* url, std::vector<ServerInfo>& out, bool originalFormat) {
 #ifdef __ANDROID__
-    SDL_Log("curlFetch: not supported on Android (TODO: use Java HTTP)");
-    (void)url; (void)out; (void)originalFormat;
+    std::string body = androidFetchUrl(url);
+    if (body.empty()) return;
+
+    // Parse line by line — same logic as the popen path below
+    std::istringstream stream(body);
+    std::string lineStr;
+    while (std::getline(stream, lineStr)) {
+        // Strip trailing \r
+        if (!lineStr.empty() && lineStr.back() == '\r') lineStr.pop_back();
+        if (lineStr.empty() || lineStr[0] == '#') continue;
+
+        char host[256] = "", name[256] = "";
+        int port = 1511;
+        if (originalFormat) {
+            if (sscanf(lineStr.c_str(), "%255s %d", host, &port) < 2) continue;
+        } else {
+            char hostport[256] = "";
+            sscanf(lineStr.c_str(), "%255s %255[^\n]", hostport, name);
+            char* colon = strrchr(hostport, ':');
+            if (colon) { *colon = '\0'; strncpy(host, hostport, sizeof(host)-1); port = atoi(colon+1); }
+            else strncpy(host, hostport, sizeof(host)-1);
+        }
+        if (host[0] == '\0') continue;
+        bool dup = false;
+        for (const auto& s : out) if (s.host == host && s.port == port) { dup = true; break; }
+        if (dup) continue;
+        ServerInfo si;
+        si.host = host; si.port = port;
+        si.name = (name[0] != '\0') ? name : (std::string(host) + ":" + std::to_string(port));
+        out.push_back(si);
+    }
     return;
 #endif
     char cmd[512];

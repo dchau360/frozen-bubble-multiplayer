@@ -74,5 +74,5 @@ In Android Studio AVD Manager, create a device:
 
 - Local server hosting is not available on Android (no fork/exec)
 - Use `start-server.sh` on another machine — it enables both TCP (Net Game / direct IP) and UDP broadcast (LAN Game discovery) by default
-- Public server list fetching requires Java HTTP implementation (TODO)
+- Public server list is fetched via `FrozenBubbleActivity.fetchUrl()` using `HttpURLConnection` (JNI call from C++)
 - Assets are bundled in the APK via the `assets/` source set pointing to `share/`
