@@ -138,9 +138,6 @@ Or right-click the app → **Open** → **Open** to bypass Gatekeeper once.
 
 ## Known Issues
 
-- **2P aim arrow** — The aim direction arrow for Player 2 in local 2-player mode is misaligned or missing.
-- **LAN server auto-discovery** — UDP broadcast discovery of local servers is unreliable; may not find a server that is running.
-- **Local multiplayer menu visibility** — Some menu items in the 2P local setup panel may not display correctly.
 - **Single-player malus targeting** — Attack bubbles in single-player mode use a placeholder targeting strategy; not yet matched to original game behavior.
 - **Network lobby visuals** — Lobby room list and player list rendering has layout gaps (incomplete polish).
 - **Windows: no local server** — The built-in local server (`fb-server`) is only built on Linux/macOS. Windows players must connect to an external server.
@@ -150,9 +147,6 @@ Or right-click the app → **Open** → **Open** to bypass Gatekeeper once.
 
 ## TODO
 
-- [ ] Fix 2P aim arrow alignment for Player 2
-- [ ] Fix LAN UDP broadcast discovery reliability
-- [ ] Fix local multiplayer menu panel display
 - [ ] Implement single-player malus targeting to match original Perl behavior
 - [ ] Polish network lobby room/player list layout
 - [ ] Windows: add server binary (or document an alternative)
