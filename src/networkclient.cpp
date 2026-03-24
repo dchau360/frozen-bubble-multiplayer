@@ -908,9 +908,9 @@ void NetworkClient::HandlePushMessage(const std::string& pushMsg) {
     } else if (pushMsg.find("KICKED:") == 0) {
         std::string nick = pushMsg.substr(8);
         SDL_Log("Kicked: %s", nick.c_str());
-    } else if (pushMsg.find("SETOPTIONS ") == 0) {
-        // Host broadcast updated game settings
-        std::string opts = pushMsg.substr(11); // Skip "SETOPTIONS "
+    } else if (pushMsg.find("OPTIONS: ") == 0) {
+        // Host broadcast updated game settings (server relays as "OPTIONS: ...")
+        std::string opts = pushMsg.substr(9); // Skip "OPTIONS: "
         SDL_Log("Received SETOPTIONS: %s", opts.c_str());
         // Parse key:value pairs separated by commas
         auto parseVal = [&](const char* key, int def) -> int {

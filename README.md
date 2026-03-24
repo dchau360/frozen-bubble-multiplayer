@@ -18,7 +18,17 @@ Two players on the same keyboard:
 - Player 2: C/X/V + D to fire
 
 ### Network Multiplayer (2–5 players)
-Play over LAN or internet using the included server. Supports chain reactions, malus (attack bubbles), win tracking, and 3–5 player layouts.
+Play over LAN or internet using the included server. Supports chain reactions, malus (attack bubbles), win tracking, and 2–5 player layouts.
+
+The host can configure the following settings in the game room — all joined players see updates in real time:
+
+| Setting | Description |
+|---|---|
+| Chain reaction | Toggle cascading chain reactions on/off |
+| Continue when players leave | Keep the game going if a player disconnects |
+| Single player targeting | All malus attacks target one player instead of spreading |
+| Victories limit | Number of round wins needed to win the match (or unlimited) |
+| Colors per player | Number of bubble colors (5–8) used for each player's board |
 
 ---
 
@@ -149,6 +159,8 @@ Or right-click the app → **Open** → **Open** to bypass Gatekeeper once.
 - [ ] Implement single-player malus targeting to match original Perl behavior
 - [ ] Polish network lobby room/player list layout
 - [ ] WebAssembly: implement public server fetch via `emscripten_fetch`
+- [ ] Per-player option to disable bubble row compression (rows dropping down)
+- [ ] Per-player option to enable bubble aim guide (trajectory assistance)
 - [ ] Sign macOS `.app` bundle for Gatekeeper compatibility
 - [ ] Sign Windows installer for SmartScreen compatibility
 
