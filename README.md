@@ -3,7 +3,7 @@
   <img src="https://github.com/user-attachments/assets/c68db5c9-7e72-4d19-8e98-c598a3f5e54e">
 </p>
 
-A C++ / SDL2 port of the classic [Frozen Bubble 2](http://www.frozen-bubble.org/), reimplementing its gameplay, network multiplayer, and chain reaction system. Targets desktop (Linux/macOS/Windows), Android TV, and WebAssembly.
+A C++ / SDL2 port of the classic [Frozen Bubble 2](http://www.frozen-bubble.org/), reimplementing its gameplay, network multiplayer, and chain reaction system. The original was Linux-only; this port targets **Linux, macOS, Windows, Android TV, and WebAssembly**.
 
 ---
 
@@ -204,6 +204,7 @@ Features ported from the original Frozen Bubble 2 Perl source:
 | Aim guide (trajectory preview) | ✅ (added beyond original) |
 | Local multiplayer (2–5 players, controllers) | ⏳ WIP |
 | Single-player malus targeting logic | ⏳ (placeholder) |
+| macOS, Windows, Android TV, WebAssembly | ✅ (original was Linux-only) |
 
 ---
 
