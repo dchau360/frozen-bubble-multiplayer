@@ -170,6 +170,34 @@ Or right-click the app → **Open** → **Open** to bypass Gatekeeper once.
 
 ---
 
+## Implemented from Original Perl Version
+
+Features ported from the original Frozen Bubble 2 Perl source:
+
+| Feature | Status |
+|---|---|
+| 100 single-player levels | ✅ |
+| Chain reaction system (cascading pops) | ✅ |
+| Malus (attack bubble) system | ✅ |
+| 2–5 player network multiplayer layouts | ✅ |
+| Network protocol (fb-server + client messages) | ✅ |
+| LAN auto-discovery (UDP broadcast) | ✅ |
+| Public server list | ✅ |
+| In-game chat | ✅ |
+| Victories limit | ✅ |
+| Per-player color count (5–8 colors) | ✅ |
+| Row compression toggle per player | ✅ |
+| Single-player targeting (malus focus) | ✅ |
+| Continue when players leave | ✅ |
+| Multiplayer training mode | ✅ |
+| Geolocation dots on world map lobby | ✅ |
+| Aim guide (trajectory preview) | ✅ (added beyond original) |
+| Local multiplayer (2–5 players, controllers) | ✅ (added beyond original) |
+| Single-player malus targeting logic | ⏳ (placeholder) |
+| WebAssembly public server fetch | ⏳ |
+
+---
+
 ## Credits
 
 Original Frozen Bubble by [Guillaume Cottenceau et al.](http://www.frozen-bubble.org/) — GPL licensed.
