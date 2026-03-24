@@ -19,7 +19,7 @@ find_package(SDL2_image REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 
-find_package(iniparser QUIET static)
+find_package(iniparser QUIET COMPONENTS static)
 if(NOT iniparser_FOUND OR NOT TARGET iniparser-static)
     message(STATUS "iniparser system package not found, building from bundled source")
     add_library(iniparser-static STATIC
