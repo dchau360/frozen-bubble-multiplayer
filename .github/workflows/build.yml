@@ -221,6 +221,10 @@ jobs:
           SectionEnd
           EOF
 
+      - name: Install NSIS
+        shell: cmd
+        run: choco install nsis -y --no-progress
+
       - name: Build installer
         shell: cmd
         run: |
