@@ -121,6 +121,15 @@ jobs:
           </dict></plist>
           EOF
 
+      - name: Ad-hoc sign app bundle
+        run: |
+          # Ad-hoc sign all bundled dylibs then the app itself.
+          # Without signing, macOS Gatekeeper shows "damaged" for apps
+          # downloaded from the internet.
+          find dist/FrozenBubble.app/Contents/Frameworks -name "*.dylib" \
+            -exec codesign --sign - --force {} \;
+          codesign --sign - --force --deep dist/FrozenBubble.app
+
       - name: Create DMG
         run: |
           create-dmg \

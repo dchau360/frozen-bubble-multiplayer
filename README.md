@@ -93,6 +93,18 @@ Controller mapping:
 
 ---
 
+## macOS: "damaged and can't be opened"
+
+The app is ad-hoc signed but not notarized. If macOS blocks it, strip the quarantine flag in Terminal:
+
+```bash
+xattr -cr /Applications/FrozenBubble.app
+```
+
+Or right-click the app → **Open** → **Open** to bypass Gatekeeper once.
+
+---
+
 ## Known Issues
 
 - **2P aim arrow** — The aim direction arrow for Player 2 in local 2-player mode is misaligned or missing.
