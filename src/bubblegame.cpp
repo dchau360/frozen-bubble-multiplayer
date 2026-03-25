@@ -1565,27 +1565,22 @@ void BubbleGame::UpdatePenguin(BubbleArray &bArray) {
 
         if (acceptInput) {
             if (currentSettings.localMultiplayer && bArray.playerAssigned >= 0 && bArray.playerAssigned < 5) {
-                // Local multiplayer: read from assigned controller
+                // Local multiplayer: keyboard first (always works, matches 1P path),
+                // then OR with controller DPAD for real gamepads.
+                // Note: on Android TV, opening SDL_GameController can suppress d-pad
+                // keyboard events, so keyboard must be read unconditionally first.
                 int idx = bArray.playerAssigned;
+                bArray.shooterLeft   = SDL_GetKeyboardState(NULL)[keys.left]   != 0;
+                bArray.shooterRight  = SDL_GetKeyboardState(NULL)[keys.right]  != 0;
+                bArray.shooterCenter = SDL_GetKeyboardState(NULL)[keys.center] != 0;
+                bArray.shooterAction = SDL_GetKeyboardState(NULL)[keys.fire]   != 0;
                 if (idx < numControllersOpen && controllers[idx]) {
                     SDL_GameController* ctrl = controllers[idx];
-                    bArray.shooterLeft   = SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_LEFT)  != 0;
-                    bArray.shooterRight  = SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) != 0;
-                    bArray.shooterCenter = SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_UP)    != 0;
-                    bArray.shooterAction = SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_A)          != 0
-                                        || SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_UP)   != 0;
-                    // On Android TV, d-pad events arrive as keyboard scancodes even when a
-                    // "controller" is registered — OR in keyboard state as fallback.
-                    bArray.shooterLeft   = bArray.shooterLeft   || SDL_GetKeyboardState(NULL)[keys.left]   != 0;
-                    bArray.shooterRight  = bArray.shooterRight  || SDL_GetKeyboardState(NULL)[keys.right]  != 0;
-                    bArray.shooterCenter = bArray.shooterCenter || SDL_GetKeyboardState(NULL)[keys.center] != 0;
-                    bArray.shooterAction = bArray.shooterAction || SDL_GetKeyboardState(NULL)[keys.fire]   != 0;
-                } else {
-                    // Keyboard fallback for each player
-                    bArray.shooterAction = SDL_GetKeyboardState(NULL)[keys.fire];
-                    bArray.shooterLeft   = SDL_GetKeyboardState(NULL)[keys.left];
-                    bArray.shooterRight  = SDL_GetKeyboardState(NULL)[keys.right];
-                    bArray.shooterCenter = SDL_GetKeyboardState(NULL)[keys.center];
+                    bArray.shooterLeft   = bArray.shooterLeft   || SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_LEFT)  != 0;
+                    bArray.shooterRight  = bArray.shooterRight  || SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) != 0;
+                    bArray.shooterCenter = bArray.shooterCenter || SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_UP)    != 0;
+                    bArray.shooterAction = bArray.shooterAction || SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_A)          != 0
+                                        || SDL_GameControllerGetButton(ctrl, SDL_CONTROLLER_BUTTON_DPAD_UP)                            != 0;
                 }
             } else if (bArray.playerAssigned == 0) {
                 bArray.shooterAction = SDL_GetKeyboardState(NULL)[keys.fire];
