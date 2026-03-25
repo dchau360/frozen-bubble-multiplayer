@@ -60,6 +60,9 @@ public class FrozenBubbleActivity extends SDLActivity {
     protected void onDestroy() {
         if (mBillingManager != null) mBillingManager.destroy();
         super.onDestroy();
+        // SDL cannot reinitialize in the same process after main() returns.
+        // Kill the process so every launch starts clean.
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     /**
