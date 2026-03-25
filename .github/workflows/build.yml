@@ -271,14 +271,16 @@ jobs:
 
       - name: Generate app icons from source PNG
         run: |
+          sudo apt-get install -y imagemagick
           SRC="share/icons/frozen-bubble-icon-64x64.png"
           RES="android/app/src/main/res"
-          declare -A SIZES=( [mipmap-mdpi]=48 [mipmap-hdpi]=72 [mipmap-xhdpi]=96 [mipmap-xxhdpi]=144 [mipmap-xxxhdpi]=192 )
-          for dir in "${!SIZES[@]}"; do
+          for size_dir in "48:mipmap-mdpi" "72:mipmap-hdpi" "96:mipmap-xhdpi" "144:mipmap-xxhdpi" "192:mipmap-xxxhdpi"; do
+            size="${size_dir%%:*}"
+            dir="${size_dir##*:}"
             mkdir -p "$RES/$dir"
-            convert "$SRC" -resize "${SIZES[$dir]}x${SIZES[$dir]}" "$RES/$dir/ic_launcher.png"
+            convert "$SRC" -resize "${size}x${size}" "$RES/$dir/ic_launcher.png"
           done
-          # TV banner: 320x180 with padding
+          # TV banner: 320x180 with the icon centered on dark blue background
           mkdir -p "$RES/drawable"
           convert "$SRC" -resize 160x160 -background "#1A237E" \
             -gravity center -extent 320x180 "$RES/drawable/tv_banner.png"
