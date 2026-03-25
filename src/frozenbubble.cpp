@@ -242,6 +242,7 @@ void FrozenBubble::HandleInput(SDL_Event *e) {
             }
             break;
         case SDL_QUIT:
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "SDL_QUIT received");
             IsGameQuit = true;
             break;
         case SDL_KEYDOWN:
