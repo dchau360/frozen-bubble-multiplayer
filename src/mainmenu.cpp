@@ -2363,7 +2363,7 @@ void MainMenu::NetPanelRender() {
             y += panelText.Coords()->h;
         };
 
-        int y = 20;  // Render at top so it's visible above the virtual keyboard
+        int y = 300;  // Render near bottom so virtual keyboard doesn't cover it
         char lineBuf[280];
 
         snprintf(lineBuf, sizeof(lineBuf), "%s\n\n", titleStr);
