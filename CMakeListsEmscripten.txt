@@ -34,11 +34,14 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EMSCRIPTEN_FLAGS}")
 
 # Emscripten ports are auto-linked via -s USE_* flags, no find_package needed
 
-if(WIN32 OR MINGW)
-    set(RES_FILES share/icons/fb.rc)
-    set(CMAKE_RC_COMPILER_INIT windres)
-    ENABLE_LANGUAGE(RC)
-endif()
+# iniparser is not an Emscripten port — build from bundled source
+add_library(iniparser-static STATIC
+    "${CMAKE_SOURCE_DIR}/third_party/iniparser/iniparser.c"
+    "${CMAKE_SOURCE_DIR}/third_party/iniparser/dictionary.c"
+)
+target_include_directories(iniparser-static PUBLIC
+    "${CMAKE_SOURCE_DIR}/third_party/iniparser"
+)
 
 add_executable(frozen-bubble-sdl2
     src/frozenbubble.cpp
@@ -55,7 +58,6 @@ add_executable(frozen-bubble-sdl2
     src/networkclient.cpp
     src/logger.cpp
     src/platform.cpp
-    ${RES_FILES}
 )
 
 set_property(TARGET frozen-bubble-sdl2 PROPERTY CXX_STANDARD 17)
@@ -64,7 +66,7 @@ set_property(TARGET frozen-bubble-sdl2 PROPERTY CXX_EXTENSIONS OFF)
 # WebAssembly doesn't use DATA_DIR - assets are preloaded
 target_compile_definitions(frozen-bubble-sdl2 PRIVATE __WASM_PORT__)
 
-# No external include paths needed - Emscripten handles SDL2 ports internally
+target_link_libraries(frozen-bubble-sdl2 PRIVATE iniparser-static)
 
 # Output as .html + .wasm bundle
 set_target_properties(frozen-bubble-sdl2 PROPERTIES SUFFIX ".html")
