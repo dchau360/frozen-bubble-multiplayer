@@ -111,6 +111,12 @@ FrozenBubble::FrozenBubble() {
     }
 #endif
 
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed: %s", SDL_GetError());
+        IsGameQuit = true;
+        return;
+    }
+
     gameOptions = GameSettings::Instance();
     gameOptions->ReadSettings();
 

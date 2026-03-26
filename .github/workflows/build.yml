@@ -347,10 +347,11 @@ jobs:
       - name: Collect deploy files
         run: |
           mkdir dist-wasm
-          cp web/index.html dist-wasm/
-          cp build-wasm/frozen-bubble-sdl2.js    dist-wasm/
-          cp build-wasm/frozen-bubble-sdl2.wasm  dist-wasm/
-          cp build-wasm/frozen-bubble-sdl2.data  dist-wasm/ 2>/dev/null || true
+          # Use the Emscripten-generated HTML (has proper canvas setup + error display)
+          cp build-wasm/frozen-bubble-sdl2.html dist-wasm/index.html
+          cp build-wasm/frozen-bubble-sdl2.js   dist-wasm/
+          cp build-wasm/frozen-bubble-sdl2.wasm dist-wasm/
+          cp build-wasm/frozen-bubble-sdl2.data dist-wasm/
           cp netlify.toml dist-wasm/
 
       - uses: actions/upload-artifact@v4
