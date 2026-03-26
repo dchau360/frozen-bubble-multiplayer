@@ -5,6 +5,8 @@
 
 A C++ / SDL2 port of the classic [Frozen Bubble 2](http://www.frozen-bubble.org/), reimplementing its gameplay, network multiplayer, and chain reaction system. The original was Linux-only; this port targets **Linux, macOS, Windows, Android TV, and WebAssembly**.
 
+**Play in browser:** [stirring-melba-cad0f4.netlify.app](https://stirring-melba-cad0f4.netlify.app) · [dchau360.itch.io/frozenbubble2](https://dchau360.itch.io/frozenbubble2)
+
 ---
 
 ## Game Modes
