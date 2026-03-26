@@ -34,9 +34,9 @@ inline std::string ASSET(const char* relpath) {
     // Assets are extracted to g_dataDir by AssetExtractor; use full path.
     return g_dataDir + relpath;
 #elif defined(__WASM_PORT__)
-    // WebAssembly uses Emscripten virtual filesystem
-    // Assets preloaded at /share, g_dataDir is "/share"
-    return std::string(relpath);  // relpath already starts with /
+    // WebAssembly: assets are preloaded at /share via --preload-file share@/share
+    // g_dataDir is "/share", so ASSET("/gfx/foo.png") → "/share/gfx/foo.png"
+    return g_dataDir + relpath;
 #else
     return g_dataDir + relpath;
 #endif
