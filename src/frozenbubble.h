@@ -75,7 +75,7 @@ private:
 
     void HandleControllerEvent(SDL_Event *e);
     static void PushKey(SDL_Keycode key, bool down);
-    static void PushScancode(SDL_Scancode sc, bool down);
+    static void PushScancode(SDL_Scancode sc, bool down, bool skipEvent = false);
     SDL_Window *window;
     SDL_Renderer *renderer;
 
