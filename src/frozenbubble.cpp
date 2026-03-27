@@ -124,7 +124,13 @@ FrozenBubble::FrozenBubble() {
     gameOptions->ReadSettings();
 
     SDL_Point resolution = gameOptions->curResolution();
+#ifdef __WASM_PORT__
+    // Fullscreen via SDL window flags causes a black canvas in browsers.
+    // The CSS shell scales the 640x480 canvas to fit the viewport instead.
+    Uint32 fullscreen = 0;
+#else
     Uint32 fullscreen = gameOptions->fullscreenMode() ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+#endif
 
     window = SDL_CreateWindow("Frozen-Bubble: SDL2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resolution.x, resolution.y, fullscreen);
     if(gameOptions->linearScaling) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
