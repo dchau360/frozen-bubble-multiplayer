@@ -74,10 +74,15 @@ void AudioMixer::PlayMusic(const char *track)
 {
     if(mixerEnabled == false || !gameSettings->canPlayMusic() || haltedMixer == true) return;
 
+#ifdef __WASM_PORT__
+    // Blocking wait loops hang the browser — just halt immediately
+    Mix_HaltMusic();
+#else
     while (Mix_FadingMusic()) SDL_Delay(10);
     if (Mix_PlayingMusic()) Mix_FadeOutMusic(500);
     SDL_Delay(400);
     while (Mix_PlayingMusic()) SDL_Delay(10);
+#endif
     
     std::string path;
     for (const MusicFile &musFile: musicFiles)
