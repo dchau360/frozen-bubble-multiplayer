@@ -101,26 +101,36 @@ The server binary (`fb-server`) is built automatically on Linux and macOS alongs
 
 The browser version (itch.io / Netlify) connects via WebSocket. Browsers block plain `ws://` connections from HTTPS pages (mixed content). To accept connections from browser players your server must be reachable over **`wss://`** (WebSocket Secure).
 
-The simplest setup is a reverse proxy in front of `fb-server`:
+The simplest setup is a reverse proxy in front of `fb-server`. You need a **domain name** and a **TLS certificate** (free via Let's Encrypt).
 
-**nginx** (port 443 → fb-server on 1511):
-```nginx
-location /fb {
-    proxy_pass http://127.0.0.1:1511;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-```
-
-**Caddy** (automatic HTTPS, port 1511 → wss):
+**Caddy** — easiest option, fetches and renews Let's Encrypt certs automatically:
 ```
 yourdomain.com {
     reverse_proxy /fb localhost:1511
 }
 ```
 
-Desktop clients (Linux / macOS / Windows / Android) connect over plain TCP and are unaffected.
+**nginx** — requires obtaining a certificate first (e.g. `certbot --nginx -d yourdomain.com`):
+```nginx
+server {
+    listen 443 ssl;
+    server_name yourdomain.com;
+
+    ssl_certificate     /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+
+    location /fb {
+        proxy_pass http://127.0.0.1:1511;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Browser clients then connect to `wss://yourdomain.com/fb` in the Net Game IP field.
+
+Desktop clients (Linux / macOS / Windows / Android) connect over plain TCP and are unaffected by this requirement.
 
 ---
 
